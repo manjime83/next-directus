@@ -1,0 +1,73 @@
+services:
+  postgres:
+    build:
+      dockerfile: Dockerfile.postgres
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    ports:
+      - 5050:80
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${ADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${ADMIN_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    depends_on:
+      - postgres
+    restart: always
+
+  redis:
+    image: redis:7
+    restart: always
+
+  directus:
+    image: directus/directus:10
+    ports:
+      - 8055:8055
+    volumes:
+      - ./data/directus/uploads:/directus/uploads
+    environment:
+      - SECRET
+      - LOG_LEVEL
+
+      - DB_CLIENT=pg
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER
+      - DB_PASSWORD
+      - DB_DATABASEß
+
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+      - CACHE_ENABLED=true
+      - CACHE_AUTO_PURGE=true
+      - CACHE_STORE=redis
+
+      - EMAIL_FROM
+      - EMAIL_TRANSPORT
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_SECURE
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+
+      - WEBSOCKETS_ENABLED=true
+
+      - ADMIN_EMAIL
+      - ADMIN_PASSWORD
+
+      - PUBLIC_URL
+    restart: always
+    depends_on:
+      - postgres
+      - redis
