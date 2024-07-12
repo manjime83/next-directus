@@ -7,7 +7,7 @@
       "Port": 5432,
       "MaintenanceDB": "directus",
       "Username": "directus",
-      "PasswordExecCommand": "echo $PGADMIN_DEFAULT_PASSWORD"
+      "PasswordExecCommand": "echo $POSTGRES_PASSWORD"
     }
   }
 }

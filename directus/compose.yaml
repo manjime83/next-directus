@@ -21,6 +21,7 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=${ADMIN_PASSWORD}
       - PGADMIN_CONFIG_SERVER_MODE=False
       - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     depends_on:
       - postgres
     restart: always
@@ -29,13 +30,32 @@ services:
     image: redis:7
     restart: always
 
+  maildev:
+    image: maildev/maildev
+    # command: --auto-relay
+    ports:
+      - 1080:1080
+    environment:
+      - MAILDEV_INCOMING_USER=${EMAIL_SMTP_USER}
+      - MAILDEV_INCOMING_PASS=${EMAIL_SMTP_PASSWORD}
+
+      - MAILDEV_OUTGOING_HOST
+      - MAILDEV_OUTGOING_PORT
+      - MAILDEV_OUTGOING_USER
+      - MAILDEV_OUTGOING_PASS
+      - MAILDEV_OUTGOING_SECURE=true
+    restart: always
+
   directus:
     image: directus/directus:10
     ports:
       - 8055:8055
     volumes:
       - ./data/directus/uploads:/directus/uploads
+      - ./data/directus/extensions:/directus/extensions
     environment:
+      - PUBLIC_URL
+
       - SECRET
       - LOG_LEVEL
 
@@ -44,7 +64,7 @@ services:
       - DB_PORT=5432
       - DB_USER
       - DB_PASSWORD
-      - DB_DATABASEß
+      - DB_DATABASE
 
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -54,10 +74,9 @@ services:
       - CACHE_STORE=redis
 
       - EMAIL_FROM
-      - EMAIL_TRANSPORT
+      - EMAIL_TRANSPORT=smtp
       - EMAIL_SMTP_HOST
       - EMAIL_SMTP_PORT
-      - EMAIL_SMTP_SECURE
       - EMAIL_SMTP_USER
       - EMAIL_SMTP_PASSWORD
 
@@ -66,7 +85,6 @@ services:
       - ADMIN_EMAIL
       - ADMIN_PASSWORD
 
-      - PUBLIC_URL
     restart: always
     depends_on:
       - postgres
