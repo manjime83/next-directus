@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "create-snapshot": "cd directus && docker compose exec -it directus node cli.js schema snapshot --yes snapshot.yaml && docker compose cp directus:/directus/snapshot.yaml snapshots/\"$(date \"+%F\")\"-snapshot-\"$(date \"+%s\")\".yaml",
+    "directus": "directusctl"
   },
   "dependencies": {
     "@directus/sdk": "^16.1.1",
@@ -16,6 +18,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@directus/cli": "^9.14.3",
     "@types/node": "^20.14.10",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

@@ -5,6 +5,7 @@ services:
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     environment:
+      - POSTGRES_INITDB_ARGS=--data-checksums
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_DATABASE}
@@ -38,54 +39,35 @@ services:
     environment:
       - MAILDEV_INCOMING_USER=${EMAIL_SMTP_USER}
       - MAILDEV_INCOMING_PASS=${EMAIL_SMTP_PASSWORD}
+    env_file:
+      - .env.maildev
+    restart: always
 
-      - MAILDEV_OUTGOING_HOST
-      - MAILDEV_OUTGOING_PORT
-      - MAILDEV_OUTGOING_USER
-      - MAILDEV_OUTGOING_PASS
-      - MAILDEV_OUTGOING_SECURE=true
+  minio:
+    image: minio/minio:latest
+    entrypoint: sh
+    command: -c 'mkdir -p /data/directus && /usr/bin/minio server --console-address :9001 /data'
+    ports:
+      - 9001:9001
+    volumes:
+      - ./data/minio:/data
+    environment:
+      - MINIO_ROOT_USER=${ADMIN_EMAIL}
+      - MINIO_ROOT_PASSWORD=${ADMIN_PASSWORD}
     restart: always
 
   directus:
-    image: directus/directus:10
+    image: directus/directus:11.0.0-rc.3
     ports:
       - 8055:8055
     volumes:
       - ./data/directus/uploads:/directus/uploads
       - ./data/directus/extensions:/directus/extensions
-    environment:
-      - PUBLIC_URL
-
-      - SECRET
-      - LOG_LEVEL
-
-      - DB_CLIENT=pg
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER
-      - DB_PASSWORD
-      - DB_DATABASE
-
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-
-      - CACHE_ENABLED=true
-      - CACHE_AUTO_PURGE=true
-      - CACHE_STORE=redis
-
-      - EMAIL_FROM
-      - EMAIL_TRANSPORT=smtp
-      - EMAIL_SMTP_HOST
-      - EMAIL_SMTP_PORT
-      - EMAIL_SMTP_USER
-      - EMAIL_SMTP_PASSWORD
-
-      - WEBSOCKETS_ENABLED=true
-
-      - ADMIN_EMAIL
-      - ADMIN_PASSWORD
-
+    env_file:
+      - .env
     restart: always
     depends_on:
       - postgres
       - redis
+      - minio
+      - maildev
